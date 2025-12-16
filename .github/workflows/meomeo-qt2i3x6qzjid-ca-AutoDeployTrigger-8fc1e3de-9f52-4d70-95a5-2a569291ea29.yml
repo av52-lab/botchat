@@ -1,0 +1,49 @@
+name: Trigger auto deployment for meomeo-qt2i3x6qzjid-ca
+
+# When this action will be executed
+on:
+  # Automatically trigger it when detected changes in repo
+  push:
+    branches: 
+      [ main ]
+    paths:
+    - '**'
+    - '.github/workflows/meomeo-qt2i3x6qzjid-ca-AutoDeployTrigger-8fc1e3de-9f52-4d70-95a5-2a569291ea29.yml'
+
+  # Allow manual trigger 
+  workflow_dispatch:      
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions: 
+      id-token: write #This is required for requesting the OIDC JWT Token
+      contents: read #Required when GH token is used to authenticate with private repo
+
+    steps:
+      - name: Checkout to the branch
+        uses: actions/checkout@v2
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.MEOMEOQT2I3X6QZJIDCA_AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.MEOMEOQT2I3X6QZJIDCA_AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.MEOMEOQT2I3X6QZJIDCA_AZURE_SUBSCRIPTION_ID }}
+
+      - name: Build and push container image to registry
+        uses: azure/container-apps-deploy-action@v2
+        with:
+          appSourcePath: ${{ github.workspace }}
+          _dockerfilePathKey_: _dockerfilePath_
+          _targetLabelKey_: _targetLabel_
+          registryUrl: meomeoqt2i3x6qzjideregistry.azurecr.io
+          registryUsername: ${{ secrets.MEOMEOQT2I3X6QZJIDCA_REGISTRY_USERNAME }}
+          registryPassword: ${{ secrets.MEOMEOQT2I3X6QZJIDCA_REGISTRY_PASSWORD }}
+          containerAppName: meomeo-qt2i3x6qzjid-ca
+          resourceGroup: meomeo-rg
+          imageToBuild: meomeoqt2i3x6qzjideregistry.azurecr.io/meomeo-qt2i3x6qzjid-ca:${{ github.sha }}
+          _buildArgumentsKey_: |
+            _buildArgumentsValues_
+
+
